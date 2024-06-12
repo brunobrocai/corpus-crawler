@@ -22,12 +22,12 @@ except IndexError:
     sys.exit(1)
 
 try:
-    health_files = count_files(f'{site}page_contents')
+    article_files = count_files(f'{site}page_contents')
     board_files = count_files(f'{site}board_pages')
 
 except FileNotFoundError:
-    health_files = count_files(f'{site}health_pages')
-    board_files = count_files(f'{site}nonhealth_pages')
+    article_files = count_files(f'{site}article_pages')
+    board_files = count_files(f'{site}nonarticle_pages')
 
-print(f'Health files: {health_files}')
+print(f'article files: {article_files}')
 print(f'Board files: {board_files}')

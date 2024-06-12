@@ -7,10 +7,11 @@ Before executing, make sure you have the following python libraries installed:
 + bs4
 + requests
 + tqdm
++ lxml
 
 You can install them by running the following command:
 ```bash
-pip install bs4 requests tqdm
+pip install bs4 requests tqdm lxml
 ```
 
 ## Usage
@@ -81,4 +82,40 @@ or, if you want to use a checker function:
 
 ```bash
 python crawl_checker.py <dir_name> <checker_function_name>
+```
+
+## Monitoring and Post-Editing
+You can keep track of your crawling with the three python files starting with a \_:
+
+### \_build_graph.py
+... creates a graph that shows how many pages were still open at any point in your crawling.
+
+Requirements:
++ numpy
++ matplotlib
+
+Run the following command install the required libraries:
+```bash
+pip install numpy matplotlib
+```
+
+Usage:
+```bash
+python _build_graph.py <dir_name>
+```
+
+### \_corpus_metadata.py
+Find out how many files you have crawled.
+
+Usage:
+```bash
+python _corpus_metadata.py <dir_name>
+```
+
+### \_open_domains.py
+Find out how many domains and how many urls from those domains are still left to crawl.
+
+Usage:
+```bash
+python _open_domains.py
 ```
