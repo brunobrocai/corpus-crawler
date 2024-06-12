@@ -1,4 +1,3 @@
-
 import re
 from bs4 import BeautifulSoup
 
@@ -20,12 +19,15 @@ TOPICS = (
 def spektrum_is_ai(html, url):
     soup = BeautifulSoup(html, 'lxml')
 
+    # Check if the URL contains a topic
+    # we care about
     for topic in TOPICS:
         if topic in url:
             return True
     if not re.search(r'[0-9]{3}$', url):
         return True
 
+    # Check the keywords if they contain AI terms
     kywds = soup.find('meta', {'name': 'keywords'})
     if kywds is not None:
         kywds = kywds['content'].split(', ')
@@ -33,6 +35,7 @@ def spektrum_is_ai(html, url):
             if re.search(AI_PATTERN, kywd):
                 return True
 
+    # Check the text for AI terms
     text = soup.get_text(separator=' ')
     if len(re.findall(AI_PATTERN, text)) > 2:
         return True
@@ -40,23 +43,24 @@ def spektrum_is_ai(html, url):
     return False
 
 
-def infoakt_is_ai(html, url):
-    if url:
-        pass
+def infoakt_is_ai(html, _url):
 
     soup = BeautifulSoup(html, 'lxml')
 
-    kywds = soup.find('meta', {'name': 'keywords'})
-
+    # Check if the page is an article.
+    # If not, we crawl it to find more articles
     link = soup.find('link', {'rel': 'canonical'})
     if not re.search(r'\.html$', link['href']):
         return True
 
+    # Check the keywords if they contain AI terms
+    kywds = soup.find('meta', {'name': 'keywords'})
     if kywds:
         for keyword in kywds['content'].split(', '):
             if re.search(AI_PATTERN, keyword):
                 return True
 
+    # Check the text for AI terms
     text = soup.get_text(separator=' ')
     if len(re.findall(AI_PATTERN, text)) > 1:
         return True
