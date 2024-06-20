@@ -71,6 +71,17 @@ def generate(amount: int, dirname: str, special_param: str) -> None:
     # The urls will be written into the queue of the specified dir
 ```
 
+To generate the urls to the queue, run the following command. It takes the following args:
++ dir_name: The name of the directory from before
++ function: The name of the function you defined above
++ amount: The amount of links you want to add (e.g. 100 if the website has 100 pages)
++ special_param: A special parameter that you might need for your function (optional). This usually is the base url of the domain (e.g. topic page) that you want to crawl.
+
+```bash
+python generate_links.py <dir_name> <function> <amount> <special_param>
+```
+
+
 ### Run the crawler
 There are two crawlers available, depending on wether or not you want to use a checker function. To run the crawler, execute the following command:
 
