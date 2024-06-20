@@ -1,5 +1,5 @@
 import sys
-from _crawling_functions import new_crawlers, special_funcs
+from _crawling_functions import new_crawlers, _checker_funcs
 
 
 def handle_cmd_line_args():
@@ -19,7 +19,7 @@ def handle_cmd_line_args():
         sitename = sitename[:-1]
 
     function_str = sys.argv[2]
-    function = getattr(special_funcs, function_str)
+    function = getattr(_checker_funcs, function_str)
 
     return sitename, function
 
