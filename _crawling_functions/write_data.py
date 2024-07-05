@@ -19,7 +19,7 @@ def dump_html(folder, filename, html):
 
     filename = filename.replace('/', '_')
     filename = filename[:250]
-    file_path = f'{folder}/{filename}.html'
+    file_path = os.path.join(folder, f'{filename}.html')
 
     if os.path.exists(file_path):
         raise FileExistsError(f"File '{file_path}' already exists.")
@@ -44,7 +44,7 @@ def write_html_to_json(folder, url, html):
 
     filename = url.replace('/', '_')
     filename = filename[:250]
-    file_path = f'{folder}/{filename}.json'
+    file_path = os.path.join(folder, f'{filename}.html')
 
     if os.path.exists(file_path):
         raise FileExistsError(f"File '{file_path}' already exists.")
