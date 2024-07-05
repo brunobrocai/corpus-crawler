@@ -5,11 +5,9 @@ used in the crawling process and that differ between websites.
 Author: Bruno Brocai
 """
 
-
 import configparser
 from dataclasses import dataclass
 import os
-
 
 @dataclass
 class UrlPatterns:
@@ -56,7 +54,6 @@ class UrlPatterns:
 
         return patterns_dict
 
-
 @dataclass
 class TrackingFiles:
     """Represents the files used to track the crawling process.
@@ -74,12 +71,12 @@ class TrackingFiles:
     directory: str
 
     def __post_init__(self):
-        self.error = f'{self.directory}/resources/error.txt'
-        self.queue = f'{self.directory}/resources/queue.txt'
-        self.visited = f'{self.directory}/resources/visited.txt'
-        self.graph = f'{self.directory}/resources/graph.txt'
-        self.irrelevant = f'{self.directory}/resources/irrelevant.txt'
-        self.forbidden = f'{self.directory}/resources/forbidden.txt'
+        self.error = os.path.join(self.directory, 'resources', 'error.txt')
+        self.queue = os.path.join(self.directory, 'resources', 'queue.txt')
+        self.visited = os.path.join(self.directory, 'resources', 'visited.txt')
+        self.graph = os.path.join(self.directory, 'resources', 'graph.txt')
+        self.irrelevant = os.path.join(self.directory, 'resources', 'irrelevant.txt')
+        self.forbidden = os.path.join(self.directory, 'resources', 'forbidden.txt')
 
     @property
     def all_files_dict(self):
@@ -91,7 +88,6 @@ class TrackingFiles:
             'irrelevant_txt': self.irrelevant,
             'forbidden': self.forbidden
         }
-
 
 @dataclass
 class GoalDirectory:
@@ -107,9 +103,8 @@ class GoalDirectory:
     directory: str
 
     def __post_init__(self):
-        self.not_article = f'{self.directory}/nonarticle_pages'
-        self.article = f'{self.directory}/article_pages'
-
+        self.not_article = os.path.join(self.directory, 'nonarticle_pages')
+        self.article = os.path.join(self.directory, 'article_pages')
 
 @dataclass
 class OldGoalDir:
@@ -117,9 +112,8 @@ class OldGoalDir:
     directory: str
 
     def __post_init__(self):
-        self.not_article = f'{self.directory}/board_pages'
-        self.article = f'{self.directory}/page_contents'
-
+        self.not_article = os.path.join(self.directory, 'board_pages')
+        self.article = os.path.join(self.directory, 'page_contents')
 
 @dataclass
 class MediaGoalDirectory(GoalDirectory):
@@ -137,17 +131,16 @@ class MediaGoalDirectory(GoalDirectory):
     """
 
     def __post_init__(self):
-
-        self.images = f'{self.directory}/images'
+        self.images = os.path.join(self.directory, 'images')
         self.imagecount = self.count_files(self.images)
 
-        self.pdfs = f'{self.directory}/pdfs'
+        self.pdfs = os.path.join(self.directory, 'pdfs')
         self.pdfcount = self.count_files(self.pdfs)
 
-        self.videos = f'{self.directory}/videos'
+        self.videos = os.path.join(self.directory, 'videos')
         self.videocount = self.count_files(self.videos)
 
-        self.audios = f'{self.directory}/audios'
+        self.audios = os.path.join(self.directory, 'audios')
         self.audiocount = self.count_files(self.audios)
 
     def count_files(self, directory):
@@ -161,7 +154,6 @@ class MediaGoalDirectory(GoalDirectory):
 
         return num_files
 
-
 @dataclass
 class MediaTrackingFiles(TrackingFiles):
     """Represents the files used to track the crawling process
@@ -172,7 +164,7 @@ class MediaTrackingFiles(TrackingFiles):
 
     def __post_init__(self):
         super().__post_init__()
-        self.image_index = f'{self.indexdirs.images}/_index_.csv'
-        self.pdf_index = f'{self.indexdirs.pdfs}/_index_.csv'
-        self.video_index = f'{self.indexdirs.videos}/_index_.csv'
-        self.audio_index = f'{self.indexdirs.audios}/_index_.csv'
+        self.image_index = os.path.join(self.indexdirs.images, '_index_.csv')
+        self.pdf_index = os.path.join(self.indexdirs.pdfs, '_index_.csv')
+        self.video_index = os.path.join(self.indexdirs.videos, '_index_.csv')
+        self.audio_index = os.path.join(self.indexdirs.audios, '_index_.csv')
