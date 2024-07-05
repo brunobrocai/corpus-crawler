@@ -44,7 +44,7 @@ def write_html_to_json(folder, url, html):
 
     filename = url.replace('/', '_')
     filename = filename[:250]
-    file_path = os.path.join(folder, f'{filename}.html')
+    file_path = os.path.join(folder, f'{filename}.json')
 
     if os.path.exists(file_path):
         raise FileExistsError(f"File '{file_path}' already exists.")
