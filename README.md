@@ -8,11 +8,14 @@ Before executing, make sure you have the following python libraries installed:
 + requests
 + tqdm
 + lxml
++ typer
 
 You can install them by running the following command:
 ```bash
-pip install bs4 requests tqdm lxml
+pip install bs4 requests tqdm lxml typer
 ```
+
+In addition, you need `playwright` to be installed. Check the playwright documentation for the installation instructions. It can be found [here](https://playwright.dev/python/docs/intro).
 
 ## Usage
 This tool runs on the command line. To crawl a site, perform the following steps:
@@ -86,14 +89,23 @@ python generate_links.py <dir_name> <function> <amount> <special_param>
 There are two crawlers available, depending on wether or not you want to use a checker function. To run the crawler, execute the following command:
 
 ```bash
-python crawl_classic.py <dir_name>
+python crawl.py <dir_name> <options>
 ```
 
-or, if you want to use a checker function:
+There are two options at the moment:
+>`--checker (or -c) <checker_function_name>`
+>
+>Run a check before declaring a page as relevant. The function should be defined in the *_checker_funcs.py* file. Pass its name with the option `-c`.
 
+>`--dynamic (or -d)`
+>
+>Use the dynamic crawler. This crawler uses the playwright library to crawl the website. This is useful if the website uses javascript to load the content. The dynamic crawler is slower than the static one and not necessary if the website does not place important content behind javascript.
+
+Here is an example using both options:
 ```bash
-python crawl_checker.py <dir_name> <checker_function_name>
+python crawl.py <dir_name> --checker <checker_function_name> --dynamic
 ```
+
 
 ## Monitoring and Post-Editing
 You can keep track of your crawling with the three python files starting with a \_:
