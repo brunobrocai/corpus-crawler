@@ -5,6 +5,8 @@ import concurrent.futures
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from playwright.sync_api import sync_playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 
 def urls_from_files(directory):
@@ -382,3 +384,32 @@ def read_index_csv(file_path):
             if row:
                 crawled.add(row[0])
     return crawled
+
+
+def get_content_from_url(url, selector='body', timeout=300):
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+
+            # Go to the URL
+            page.goto(url)
+
+            # Wait for the content to be rendered
+            page.wait_for_selector(selector, timeout=timeout)
+
+            # Extract the HTML content
+            html_content = page.content()
+
+            # Close the browser
+            browser.close()
+
+            print('heheh')
+
+            return html_content
+    except PlaywrightTimeoutError:
+        print(f"Timeout waiting for {selector} on {url}")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None

@@ -183,7 +183,11 @@ class ClassicCrawler(Crawler):
     Crawl domains where the board and post urls are a regex pattern.
     """
 
-    def start_crawling(self, max_pages=None):
+    def __init__(self, website, config='patterns.ini'):
+        super().__init__(website, config)
+        self.page_count = 0
+
+    def start_crawling(self, max_pages=None, dynamic_pages=False):
         """
         Crawls a set of start links up to a maximum number of pages.
 
@@ -201,114 +205,119 @@ class ClassicCrawler(Crawler):
             boardstr (str): String to identify board URLs.
             notinclude (str): String to identify URLs to exclude from crawling.
         """
-        page_count = 0
 
         if not self.ready_to_crawl():
             return None
 
         # Main crawling loop
-        while super().continue_crawling(max_pages, page_count, self.to_crawl):
+        while super().continue_crawling(max_pages, self.page_count, self.to_crawl):
 
-            page_count += 1
-            next_url = self._to_crawl.pop()
+            self.scrape_page(dynamic_pages=dynamic_pages)
             write_data.append_line_to_file(
-                self.tracking_files.visited,
-                next_url
+                self.tracking_files.graph,
+                str(len(self.to_crawl))
             )
+            # Randomize wait time so it's a little less sus
+            self.wait_random_time()
 
-            try:
-                self.crawled_urls.add(next_url)
-                print(f'{page_count}: ', next_url)
+        return None
+
+    def scrape_page(self, checker=lambda x: True, dynamic_pages=False):
+        self.page_count += 1
+        next_url = self._to_crawl.pop()
+        write_data.append_line_to_file(
+            self.tracking_files.visited,
+            next_url
+        )
+
+        try:
+            self.crawled_urls.add(next_url)
+            print(f'{self.page_count}: ', next_url)
+            if dynamic_pages:
+                html = retrieve_data.get_content_from_url(next_url)
+            else:
                 html = retrieve_data.get_html_from_url(next_url)
 
-                # If the URL is a post URL, save the HTML content
-                if re.match(self.url_patterns.article_pattern, next_url):
-                    write_data.write_html_to_json(
-                            self.dir_structure.article,
-                            next_url,
-                            html
-                        )
-
-                # If the URL is a board URL, save the HTML content and add URL
-                elif (
-                    re.match(self.url_patterns.notarticle_pattern, next_url)
-                ):
-                    write_data.write_html_to_json(
-                            self.dir_structure.not_article,
-                            next_url,
-                            html
-                        )
-                else:
-                    write_data.append_line_to_file(
-                        self.tracking_files.irrelevant,
-                        next_url
-                    )
-
-                # Extract links from the HTML content
-                # and add them to the set to crawl
-                new_links = retrieve_data.get_links_from_html(
-                    html
-                )
-                relevant_links, irrel_links = self.sort_incoming_links(
-                    new_links
-                )
-
-                self.to_crawl = self.to_crawl | relevant_links
-
-                write_data.append_lines_to_file(
-                    self.tracking_files.queue,
-                    relevant_links
-                )
-                write_data.append_lines_to_file(
+            if not checker(html, next_url):
+                write_data.append_line_to_file(
                     self.tracking_files.irrelevant,
-                    irrel_links
-                )
-
-                write_data.append_line_to_file(
-                    self.tracking_files.graph,
-                    str(len(self.to_crawl))
-                )
-
-                # Randomize wait time so it's a little less sus
-                self.wait_random_time()
-
-            except (
-                ValueError,
-                TypeError,
-                FileExistsError,
-                requests.exceptions.RequestException,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError
-            ) as e:
-                write_data.append_line_to_file(
-                    self.tracking_files.error,
                     next_url
                 )
-                print(e)
-                self.wait_random_time()
+                return None
 
-        write_data.append_line_to_file(
-            self.tracking_files.graph,
-            str(len(self.to_crawl))
-        )
+            # If the URL is a post URL, save the HTML content
+            if re.match(self.url_patterns.article_pattern, next_url):
+                write_data.write_html_to_json(
+                        self.dir_structure.article,
+                        next_url,
+                        html
+                    )
+
+            # If the URL is a board URL, save the HTML content and add URL
+            elif (
+                re.match(self.url_patterns.notarticle_pattern, next_url)
+            ):
+                write_data.write_html_to_json(
+                        self.dir_structure.not_article,
+                        next_url,
+                        html
+                    )
+            else:
+                write_data.append_line_to_file(
+                    self.tracking_files.irrelevant,
+                    next_url
+                )
+
+            # Extract links from the HTML content
+            # and add them to the set to crawl
+            new_links = retrieve_data.get_links_from_html(
+                html
+            )
+            relevant_links, irrel_links = self.sort_incoming_links(
+                new_links
+            )
+
+            self.to_crawl = self.to_crawl | relevant_links
+
+            write_data.append_lines_to_file(
+                self.tracking_files.queue,
+                relevant_links
+            )
+            write_data.append_lines_to_file(
+                self.tracking_files.irrelevant,
+                irrel_links
+            )
+
+        except (
+            ValueError,
+            TypeError,
+            FileExistsError,
+            requests.exceptions.RequestException,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError
+        ) as e:
+            write_data.append_line_to_file(
+                self.tracking_files.error,
+                next_url
+            )
+            print(e)
 
         return None
 
 
-class CheckerCrawler(Crawler):
+class CheckerCrawler(ClassicCrawler):
     """
     Crawl domains where the board and post urls are a regex pattern
     and a checker function is provided to determine if the page is relevant.
     """
 
     def __init__(
-        self, website, checker_func, check_board=True, config='patterns.ini'
+        self, website, checker_func, config='patterns.ini'
     ):
         self.checker_func = checker_func
-        self.check_for_board = check_board
         super().__init__(website, config)
 
-    def start_crawling(self, max_pages=None):
+    def start_crawling(self, max_pages=None, dynamic_pages=False):
         """
         Crawls a set of start links up to a maximum number of pages.
 
@@ -326,108 +335,22 @@ class CheckerCrawler(Crawler):
             boardstr (str): String to identify board URLs.
             notinclude (str): String to identify URLs to exclude from crawling.
         """
-        page_count = 0
 
         if not self.ready_to_crawl():
             return None
 
         # Main crawling loop
-        while super().continue_crawling(max_pages, page_count, self.to_crawl):
+        while super().continue_crawling(max_pages, self.page_count, self.to_crawl):
 
-            page_count += 1
-            next_url = self._to_crawl.pop()
-            write_data.append_line_to_file(
-                self.tracking_files.visited,
-                next_url
+            self.scrape_page(
+                checker=self.checker_func, dynamic_pages=dynamic_pages
             )
-
-            try:
-                self.crawled_urls.add(next_url)
-                print(f'{page_count}: ', next_url)
-                html = retrieve_data.get_html_from_url(next_url)
-
-                check = self.checker_func(html, next_url)
-                checkboard = check and self.check_for_board
-
-                # If the URL is a post URL, save the HTML content
-                if (
-                    re.match(self.url_patterns.article_pattern, next_url)
-                    and check
-                ):
-                    write_data.write_html_to_json(
-                            self.dir_structure.article,
-                            next_url,
-                            html
-                        )
-
-                # If the URL is a board URL, save the HTML content and add URL
-                elif (
-                    re.match(self.url_patterns.notarticle_pattern, next_url)
-                    and checkboard
-                ):
-                    write_data.write_html_to_json(
-                            self.dir_structure.not_article,
-                            next_url,
-                            html
-                        )
-                else:
-                    write_data.append_line_to_file(
-                        self.tracking_files.irrelevant,
-                        next_url
-                    )
-                    write_data.append_line_to_file(
-                        self.tracking_files.graph,
-                        str(len(self.to_crawl))
-                    )
-                    self.wait_random_time()
-                    continue
-
-                # Extract links from the HTML content
-                # and add them to the set to crawl
-                new_links = retrieve_data.get_links_from_html(
-                    html
-                )
-                relevant_links, irrel_links = self.sort_incoming_links(
-                    new_links
-                )
-                self.to_crawl = self.to_crawl | relevant_links
-
-                write_data.append_lines_to_file(
-                    self.tracking_files.queue,
-                    relevant_links
-                )
-                write_data.append_lines_to_file(
-                    self.tracking_files.irrelevant,
-                    irrel_links
-                )
-
-                write_data.append_line_to_file(
-                    self.tracking_files.graph,
-                    str(len(self.to_crawl))
-                )
-
-                # Randomize wait time so it's a little less sus
-                self.wait_random_time()
-
-            except (
-                ValueError,
-                TypeError,
-                FileExistsError,
-                requests.exceptions.RequestException,
-                requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError
-            ) as e:
-                write_data.append_line_to_file(
-                    self.tracking_files.error,
-                    next_url
-                )
-                print(e)
-                self.wait_random_time()
-
-        write_data.append_line_to_file(
-            self.tracking_files.graph,
-            str(len(self.to_crawl))
-        )
+            write_data.append_line_to_file(
+                self.tracking_files.graph,
+                str(len(self.to_crawl))
+            )
+            # Randomize wait time so it's a little less sus
+            self.wait_random_time()
 
         return None
 
