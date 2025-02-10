@@ -222,7 +222,7 @@ class ClassicCrawler(Crawler):
 
         return None
 
-    def scrape_page(self, checker=lambda x: True, dynamic_pages=False):
+    def scrape_page(self, checker=lambda x, y: True, dynamic_pages=False):
         self.page_count += 1
         next_url = self._to_crawl.pop()
         write_data.append_line_to_file(
